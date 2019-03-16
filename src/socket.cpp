@@ -164,9 +164,10 @@ bool TcpServerSession::start(const char *aIp,const int &aPort)
     mServerAddr.sin_addr.s_addr = inet_addr(aIp);
     mServerAddr.sin_port = htons(aPort);
 
+
     if ((bind(mSockFd,(struct  sockaddr*)&mServerAddr, sizeof(mServerAddr))) != 0)
     {
-        LOG(ERROR)<<"Bind Failed";
+    LOG(ERROR)<<"Bind Failed";
         return false;
     }
 
