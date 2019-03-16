@@ -318,6 +318,9 @@ public:
     // Empty Constructor
     INIReader() {};
 
+
+    void setFileName(std::string filename);
+
     // Construct INIReader and parse given filename. See ini.h for more info
     // about the parsing.
     INIReader(std::string filename);
@@ -369,6 +372,11 @@ protected:
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+
+inline void INIReader::setFileName(std::string filename)
+{
+    _error = ini_parse(filename.c_str(), ValueHandler, this);
+}
 
 inline INIReader::INIReader(std::string filename)
 {

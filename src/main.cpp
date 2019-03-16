@@ -55,10 +55,9 @@ private:
     TcpServerSession *s;
 };
 
-structlog LOGCFG = {};
-
 int main()
 {
+
     MicroTunnelApp app;
     app.start();
 
@@ -72,9 +71,7 @@ int main()
     if (signal(SIGABRT, sig_handler) == SIG_ERR)
         LOG(WARN)<<"Failed:SIGABRT Subscription";
 
-    //Basic Logging
-    LOGCFG.headers = false;
-    LOGCFG.level = DEBUG;
+
 
     TestProxy t;
     t.start();

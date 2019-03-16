@@ -1,27 +1,40 @@
 #include "microtunnelapp.h"
-#include "inireader.h"
+#include "configurator.h"
+
+structlog LOGCFG = {};
+
 
 MicroTunnelApp::MicroTunnelApp()
 {
+    //Basic Logging
+    LOGCFG.headers = true;
+    LOGCFG.level = ERROR;
 
 }
 
 bool MicroTunnelApp::start()
 {
-    LOG(INFO)<<"Starting the Tunnel";
-    INIReader reader("/home/gokul/workspace/microtunnel/config.ini"); //TODO : Change it later
-
-    if (reader.ParseError() < 0) {
-        std::cout << "Can't load 'config.ini'\n";
-        return false;
+    LOG(INFO)<<"Configuration Summary";
+    Configurator config;
+    if(config.systemconfig().debuglog==true)
+    {
+        LOGCFG.level = DEBUG;
+        LOG(INFO)<<"Debug Logs : True";
+    }
+    else
+    {
+        LOG(INFO)<<"Debug Logs : False";
     }
 
-    std::cout   << reader.GetInteger("protocol", "version", -1) << ", name="
-                 << reader.Get("user", "name", "UNKNOWN") << ", email="
-                 << reader.Get("user", "email", "UNKNOWN") << ", multi="
-                 << reader.Get("user", "multi", "UNKNOWN") << ", pi="
-                 << reader.GetReal("user", "pi", -1) << ", active="
-                 << reader.GetBoolean("user", "active", true) << "\n";
+    if(config.systemconfig().foreground==true)
+    {
+        LOG(INFO)<<"Run as service : True";
+    }
+    else
+    {
+        LOG(INFO)<<"Run as service : False";
+    }
+
 
     return true;
 }
