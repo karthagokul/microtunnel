@@ -158,7 +158,9 @@ bool TcpServerSession::start(const char *aIp,const int &aPort)
         return false;
     }
 
-    memset(&mServerAddr, 0,sizeof(mServerAddr));
+
+
+                    memset(&mServerAddr, 0,sizeof(mServerAddr));
 
     mServerAddr.sin_family = AF_INET;
     mServerAddr.sin_addr.s_addr = inet_addr(aIp);
