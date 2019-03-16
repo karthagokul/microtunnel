@@ -4,6 +4,8 @@
 #include "tcpserversession.h"
 #include "logger.h"
 
+#include "microtunnelapp.h"
+
 using namespace std;
 
 void sig_handler(int signo)
@@ -57,6 +59,11 @@ structlog LOGCFG = {};
 
 int main()
 {
+    MicroTunnelApp app;
+    app.start();
+
+    return 0;
+
     //TODO : Better way
     if (signal(SIGINT, sig_handler) == SIG_ERR)
         LOG(WARN)<<"Failed:SIGINT Subscription";
