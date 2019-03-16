@@ -17,21 +17,30 @@ void TcpClientSession::eventLoop()
         bzero(buff, sizeof(buff));
         read(mSockFd, buff, sizeof(buff));
         if(mListener)
+        {
             mListener->dataAvailable(buff);
-        LOG(INFO)<<buff;
+        }
+        else
+        {
+            LOG(DEBUG)<<"Client listener is not available yet";
+        }
+        LOG(DEBUG)<<buff;
     }
 }
 
 bool Session::writeBuffer(const char *aBuffer)
 {
     LOG_FUNCTION_NAME;
-    write(mSockFd, aBuffer, sizeof(aBuffer));
-    return false;
+    if(write(mSockFd, aBuffer, sizeof(aBuffer))<=0)
+    {
+        LOG(ERROR)<<"Sending Buffer failed";
+        return false;
+    }
+    return true;
 }
 
 bool TcpClientSession::connectToHost(const char *aIp,const int &aPort)
 {
-    std::cout<<__func__<<std::endl;
     mSockFd = socket(AF_INET, SOCK_STREAM, 0);
     if (mSockFd == -1) {
         LOG(ERROR)<<"Invalid Socket";
@@ -45,7 +54,7 @@ bool TcpClientSession::connectToHost(const char *aIp,const int &aPort)
     mServerAddr.sin_port = htons(aPort);
     if (connect(mSockFd, (struct  sockaddr*)&mServerAddr, sizeof(mServerAddr)) != 0)
     {
-        LOG(ERROR)<<"Invalid Socket";
+        LOG(ERROR)<<"Unable to Connect";
         return false;
     }
     mEventThread=new std::thread(&TcpClientSession::eventLoop,this);
@@ -64,15 +73,14 @@ bool TcpClientSession::disconnect()
     //change
     if(mSockFd==-1)
     {
-        LOG(ERROR)<<"Invalid Socket";
+        LOG(ERROR)<<"Disconnect Failed, Invalid Socket";
         return false;
     }
     if(!mEventThread)
     {
-        LOG(ERROR)<<"Invalid Socket";
+        LOG(ERROR)<<"Disconnect Failed, Event loop was empty";
         return false;
     }
-
 
     mEventThread->join();
     close(mSockFd);
@@ -102,7 +110,7 @@ bool TcpServerSession::start(const char *aIp,const int &aPort)
 
     if ((bind(mSockFd,(struct  sockaddr*)&mServerAddr, sizeof(mServerAddr))) != 0)
     {
-        LOG(ERROR)<<"Invalid Socket";
+        LOG(ERROR)<<"Bind Failed";
         return false;
     }
 
@@ -124,7 +132,7 @@ void TcpServerSession::eventLoop()
     {
         // Now server is ready to listen and verification
         if ((listen(mSockFd, 5)) != 0) {
-            LOG(ERROR)<<"Invalid Socket";
+            LOG(ERROR)<<"Listen Failed";
             exit(0);
         }
 
@@ -132,7 +140,7 @@ void TcpServerSession::eventLoop()
         // Accept the data packet from client and verification
         int connfd = accept(mSockFd, (struct  sockaddr*)&mClientAddr, (socklen_t*)&len);
         if (connfd < 0) {
-            LOG(ERROR)<<"Invalid Socket";
+            LOG(ERROR)<<"Accept Failed";
             exit(0);
         }
         TcpClientSession *s=new TcpClientSession(0);
