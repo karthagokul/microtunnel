@@ -62,11 +62,20 @@ bool Configurator::init()
                 break;
             }
 
+            std::string sourcehost=mIniReader.Get(sectionheader,TUNNEL_SOURCEHOSTNAME,"127.0.0.1");
+            std::string targethost=mIniReader.Get(sectionheader,TUNNEL_TARGETHOSTNAME,"127.0.0.1");
+
+
+
             TunnelConfig *tconfig=new TunnelConfig;
             tconfig->sourceport=sourceport;
             tconfig->targetport=targetport;
+            tconfig->targethost=targethost;
+            tconfig->sourcehost=sourcehost;
             tconfig->cipher=cipher;
-            //mTunnelConfigs.insert(sectionheader,tconfig);
+            mTunnelConfigs.insert(std::pair<std::string,TunnelConfig *>(sectionheader,tconfig));
+
+
         }
     }
 
