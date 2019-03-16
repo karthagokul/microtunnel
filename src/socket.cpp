@@ -2,6 +2,38 @@
 #include "logger.h"
 #include <iostream>
 
+SessionError Session::getError()
+{
+    SessionError errorCode=Unknown;
+    if(mSockFd!=-1)
+    {
+        int error = 0;
+        socklen_t len = sizeof (error);
+        int retval = getsockopt (mSockFd, SOL_SOCKET, SO_ERROR, &error, &len);
+        if (retval != 0)
+        {
+            /* there was a problem getting the error code */
+            fprintf(stderr, "error getting socket error code: %s\n", strerror(retval));
+            errorCode=Unknown;
+        }
+        else
+        {
+            if(error!=0)
+            {
+             //Check error value https://www.xinotes.net/notes/note/1793/
+                LOG(ERROR)<<"Socket Error Code "<<error<<": "<<strerror(error);
+                errorCode=ServerNotReachable; //Temporary , This need to be fine tuned
+            }
+            else
+            {
+                errorCode=NoError;
+            }
+        }
+
+    }
+    return errorCode;
+}
+
 TcpClientSession::TcpClientSession(TcpClientSessionListener *aListener)
     :mListener(aListener)
 {
@@ -10,12 +42,30 @@ TcpClientSession::TcpClientSession(TcpClientSessionListener *aListener)
 
 void TcpClientSession::eventLoop()
 {
+    mMutex.lock();
+    mStatus=Connected;
+    mMutex.unlock();
     LOG_FUNCTION_NAME;
-    //Mutex the mSockFd
+
     char buff[SOCKET_BUFFER_SIZE];
     for (;;) {
         bzero(buff, sizeof(buff));
-        read(mSockFd, buff, sizeof(buff));
+        int readSize=read(mSockFd, buff, sizeof(buff));
+        if(readSize<=0)
+        {
+            mMutex.lock();
+            if(getError()!=NoError)
+            {
+                LOG(ERROR)<<"Failed to read";
+            }
+            else
+            {
+                LOG(DEBUG)<<"Client has been disconnected";
+            }
+            mMutex.unlock();
+            break;
+        }
+        mMutex.lock();
         if(mListener)
         {
             mListener->dataAvailable(buff);
@@ -25,7 +75,17 @@ void TcpClientSession::eventLoop()
             LOG(DEBUG)<<"Client listener is not available yet";
         }
         LOG(DEBUG)<<buff;
+        mMutex.unlock();
     }
+    LOG(DEBUG)<<"Came out of the Event loop";
+
+    disconnect();
+}
+
+TcpClientSession::~TcpClientSession()
+{
+    LOG_FUNCTION_NAME;
+    disconnect();
 }
 
 bool Session::writeBuffer(const char *aBuffer)
@@ -70,20 +130,16 @@ bool TcpClientSession::setSocketDescriptor(const int &aFd)
 
 bool TcpClientSession::disconnect()
 {
+     mMutex.lock();
     //change
-    if(mSockFd==-1)
+    if(mSockFd>=0)
     {
-        LOG(ERROR)<<"Disconnect Failed, Invalid Socket";
-        return false;
+        LOG(ERROR)<<"Closing the Socket";
+        close(mSockFd);
+        mSockFd=-1;
     }
-    if(!mEventThread)
-    {
-        LOG(ERROR)<<"Disconnect Failed, Event loop was empty";
-        return false;
-    }
-
-    mEventThread->join();
-    close(mSockFd);
+    mStatus=Disconnected;
+    mMutex.unlock();
     return true;
 }
 
@@ -114,14 +170,36 @@ bool TcpServerSession::start(const char *aIp,const int &aPort)
         return false;
     }
 
-
+    mCleanupThread=new std::thread(&TcpServerSession::cleanupThread,this);
     mEventThread=new std::thread(&TcpServerSession::eventLoop,this);
+
     return true;
 }
 
+TcpServerSession::~TcpServerSession()
+{
+    stop();
+    if(mCleanupThread)
+    {
+        delete mCleanupThread;
+        mCleanupThread=0;
+    }
+    if(mEventThread)
+    {
+        delete mEventThread;
+        mEventThread=0;
+    }
+}
 
 bool TcpServerSession::stop()
 {
+    mMutex.lock();
+    if(mSockFd>=0)
+    {
+        close(mSockFd);
+        mSockFd=-1;
+    }
+    mMutex.unlock();
     return true;
 }
 
@@ -145,5 +223,30 @@ void TcpServerSession::eventLoop()
         }
         TcpClientSession *s=new TcpClientSession(0);
         s->setSocketDescriptor(connfd);
+        mActiveClients.push_back(s);
+        if(mListener)
+            mListener->newConnection(s);
+    }
+}
+
+void TcpServerSession::cleanupThread()
+{
+    LOG_FUNCTION_NAME;
+    while(1)
+    {
+        LOG(DEBUG)<<"Cleanup Routine : 5 seconds delay";
+        std::this_thread::sleep_for(std::chrono::seconds( 5) );
+        //Let's iterate through the sessions and see if any of them has been disconnected, if so , free up.
+        for (std::vector<TcpClientSession *>::iterator i=mActiveClients.begin(); i!=mActiveClients.end(); i++)
+        {
+            TcpClientSession *t=*i;
+            if(t && t->status()==Disconnected)
+            {
+                LOG(DEBUG)<<"Cleaning up an inactive Session";
+                i=mActiveClients.erase(i);
+                delete t;
+                i--;
+            }
+        }
     }
 }

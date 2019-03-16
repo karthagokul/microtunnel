@@ -2,7 +2,8 @@
 #define SOCKET_H
 
 #include <thread>
-#include <list>
+#include <mutex>
+#include <vector>
 
 #ifdef __WINSOCK__
     //TODO
@@ -24,7 +25,8 @@ enum SessionError
 {
     Unknown=0,
     HostNotFound,
-    ServerNotReachable
+    ServerNotReachable,
+    NoError
 };
 
 enum SessionStatus
@@ -36,6 +38,8 @@ enum SessionStatus
     ReadytoRead
 };
 
+//dirty inheritance , to be removed
+
 class Session
 {
 protected:
@@ -43,6 +47,7 @@ protected:
     std::thread *mEventThread=0;
 public:
     bool writeBuffer(const char *aBuffer);
+    SessionError getError();
 #ifdef __WINSOCK__
     //TODO
 #else
@@ -52,10 +57,12 @@ public:
 
 };
 
+
 class TcpClientSessionListener
 {
 public:
-     virtual void onError(const SessionError &aErrorCode)=0;
+    virtual void onError(const SessionError &aErrorCode){}
+    virtual void statusChanged(const SessionStatus &aStatus){}
     virtual void dataAvailable(const char *aData)=0;
 };
 
@@ -68,34 +75,45 @@ public:
     {
         mListener=aListener;
     }
-
+    SessionStatus status() const
+    {
+        return mStatus;
+    }
     bool setSocketDescriptor(const int &aFd);
     bool connectToHost(const char *aIp,const int &aPort);
     bool disconnect();
+    ~TcpClientSession();
+    std::mutex mMutex;
 
 protected:
    TcpClientSessionListener *mListener=0;
     void eventLoop();
+   SessionStatus mStatus=Disconnected;
 };
 
 class TcpServerSessionListener
 {
 public:
-   virtual void onError(const SessionError &aErrorCode)=0;
-   virtual void newConnection(const TcpClientSession *t)=0;
+   virtual void onError(const SessionError &aErrorCode){}
+   virtual void statusChanged(const SessionStatus &aStatus){}
+   virtual void newConnection(TcpClientSession *t)=0;
 };
 
 class TcpServerSession:public Session
 {
 public:
     TcpServerSession(TcpServerSessionListener *aListner);
+    ~TcpServerSession();
     bool start(const char *aIp,const int &aPort);
     bool stop();
 
 protected:
     void eventLoop();
+    void cleanupThread();
     TcpServerSessionListener *mListener;
-    std::list<TcpClientSession*> mActiveClients;
+    std::vector<TcpClientSession*> mActiveClients;
+    std::thread *mCleanupThread=0;
+    std::mutex mMutex;
 };
 
 #endif // SOCKET_H
