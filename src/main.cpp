@@ -1,6 +1,7 @@
 #include <iostream>
 #include <signal.h>
-#include "socket.h"
+#include "tcpclientsession.h"
+#include "tcpserversession.h"
 #include "logger.h"
 
 using namespace std;

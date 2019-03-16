@@ -4,6 +4,7 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include "logger.h"
 
 #ifdef __WINSOCK__
     //TODO
@@ -57,63 +58,9 @@ public:
 
 };
 
+/*
+ * TODO: The dirty Socket hierarchy and link between and server and client , May be soon once i have a base workflow ready
+ */
 
-class TcpClientSessionListener
-{
-public:
-    virtual void onError(const SessionError &aErrorCode){}
-    virtual void statusChanged(const SessionStatus &aStatus){}
-    virtual void dataAvailable(const char *aData)=0;
-};
+#endif
 
-
-class TcpClientSession:public Session
-{
-public:
-    TcpClientSession(TcpClientSessionListener *aListner);
-    void setListener(TcpClientSessionListener *aListener)
-    {
-        mListener=aListener;
-    }
-    SessionStatus status() const
-    {
-        return mStatus;
-    }
-    bool setSocketDescriptor(const int &aFd);
-    bool connectToHost(const char *aIp,const int &aPort);
-    bool disconnect();
-    ~TcpClientSession();
-    std::mutex mMutex;
-
-protected:
-   TcpClientSessionListener *mListener=0;
-    void eventLoop();
-   SessionStatus mStatus=Disconnected;
-};
-
-class TcpServerSessionListener
-{
-public:
-   virtual void onError(const SessionError &aErrorCode){}
-   virtual void statusChanged(const SessionStatus &aStatus){}
-   virtual void newConnection(TcpClientSession *t)=0;
-};
-
-class TcpServerSession:public Session
-{
-public:
-    TcpServerSession(TcpServerSessionListener *aListner);
-    ~TcpServerSession();
-    bool start(const char *aIp,const int &aPort);
-    bool stop();
-
-protected:
-    void eventLoop();
-    void cleanupThread();
-    TcpServerSessionListener *mListener;
-    std::vector<TcpClientSession*> mActiveClients;
-    std::thread *mCleanupThread=0;
-    std::mutex mMutex;
-};
-
-#endif // SOCKET_H
