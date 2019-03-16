@@ -3,18 +3,15 @@
 
 structlog LOGCFG = {};
 
-
 MicroTunnelApp::MicroTunnelApp()
 {
     //Basic Logging
     LOGCFG.headers = true;
-    LOGCFG.level = ERROR;
-
+    LOGCFG.level = DEBUG;
 }
 
 bool MicroTunnelApp::start()
 {
-    LOG(INFO)<<"Configuration Summary";
     Configurator config;
     if(config.systemconfig().debuglog==true)
     {
@@ -35,9 +32,9 @@ bool MicroTunnelApp::start()
         LOG(INFO)<<"Run as service : False";
     }
 
-
     return true;
 }
+
 bool MicroTunnelApp::stop()
 {
     LOG(INFO)<<"Stopping the Tunnel";

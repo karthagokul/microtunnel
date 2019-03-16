@@ -18,7 +18,7 @@ bool Configurator::init()
         std::cout << "Can't load 'config.ini'\n";
         return false;
     }
-    LOG(DEBUG)<<" ";
+
     std::set<std::string> sections = mIniReader.Sections();
     for (std::set<std::string>::iterator it = sections.begin(); it != sections.end(); ++it)
     {
@@ -40,16 +40,42 @@ bool Configurator::init()
         else // Tunnel Config
         {
             LOG(INFO)<<"Tunnel Configuration : " <<sectionheader;
+
+            uint sourceport=mIniReader.GetInteger(sectionheader,TUNNEL_SOURCEPORT,-1);
+            if(sourceport==-1)
+            {
+                LOG(ERROR)<<"Invalid Source Port Configuration in "<<sectionheader;
+                break;
+            }
+
+            uint targetport=mIniReader.GetInteger(sectionheader,TUNNEL_TARGETPORT,-1);
+            if(targetport==-1)
+            {
+                LOG(ERROR)<<"Invalid Target Port Configuration in "<<sectionheader;
+                break;
+            }
+
+            std::string cipher=mIniReader.Get(sectionheader,TUNNEL_CIPHER,"");
+            if(cipher.empty())
+            {
+                LOG(INFO)<<"Cipher is empty in "<<sectionheader;
+                break;
+            }
+
+            TunnelConfig *tconfig=new TunnelConfig;
+            tconfig->sourceport=sourceport;
+            tconfig->targetport=targetport;
+            tconfig->cipher=cipher;
+            //mTunnelConfigs.insert(sectionheader,tconfig);
         }
     }
-    LOG(DEBUG)<<"";
 
-    /*std::cout   << reader.GetInteger("protocol", "version", -1) << ", name="
-                 << reader.Get("user", "name", "UNKNOWN") << ", email="
-                 << reader.Get("user", "email", "UNKNOWN") << ", multi="
-                 << reader.Get("user", "multi", "UNKNOWN") << ", pi="
-                 << reader.GetReal("user", "pi", -1) << ", active="
-                 << reader.GetBoolean("user", "active", true) << "\n";*/
+/*std::cout   << reader.GetInteger("protocol", "version", -1) << ", name="
+<< reader.Get("user", "name", "UNKNOWN") << ", email="
+<< reader.Get("user", "email", "UNKNOWN") << ", multi="
+<< reader.Get("user", "multi", "UNKNOWN") << ", pi="
+<< reader.GetReal("user", "pi", -1) << ", active="
+<< reader.GetBoolean("user", "active", true) << "\n";*/
 
     return true;
 }

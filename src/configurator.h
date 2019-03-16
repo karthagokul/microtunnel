@@ -10,6 +10,11 @@
 #define GENERAL_ENABLE_LOG "enable-debug-log"
 #define GENERAL_FOREGROUND "foreground"
 
+#define TUNNEL_CIPHER "cipher"
+#define TUNNEL_ISSERVER "server"
+#define TUNNEL_SOURCEPORT "source-port"
+#define TUNNEL_TARGETPORT "target-port"
+
 //default configs
 struct GeneralConfig
 {
@@ -19,7 +24,10 @@ struct GeneralConfig
 
 struct TunnelConfig
 {
-
+    std::string cipher="";
+    bool server=true;
+    uint sourceport=8080;
+    uint targetport=9090  ;
 };
 
 class Configurator
