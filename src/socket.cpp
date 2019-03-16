@@ -20,7 +20,7 @@ SessionError Session::getError()
         {
             if(error!=0)
             {
-             //Check error value https://www.xinotes.net/notes/note/1793/
+                //Check error value https://www.xinotes.net/notes/note/1793/
                 LOG(ERROR)<<"Socket Error Code "<<error<<": "<<strerror(error);
                 errorCode=ServerNotReachable; //Temporary , This need to be fine tuned
             }
@@ -37,15 +37,15 @@ SessionError Session::getError()
 TcpClientSession::TcpClientSession(TcpClientSessionListener *aListener)
     :mListener(aListener)
 {
-    LOG(DEBUG) << "Main executed with ";;
 }
 
 void TcpClientSession::eventLoop()
 {
+    LOG_FUNCTION_NAME;
+
     mMutex.lock();
     mStatus=Connected;
     mMutex.unlock();
-    LOG_FUNCTION_NAME;
 
     char buff[SOCKET_BUFFER_SIZE];
     for (;;) {
@@ -70,15 +70,8 @@ void TcpClientSession::eventLoop()
         {
             mListener->dataAvailable(buff);
         }
-        else
-        {
-            LOG(DEBUG)<<"Client listener is not available yet";
-        }
-        LOG(DEBUG)<<buff;
         mMutex.unlock();
     }
-    LOG(DEBUG)<<"Came out of the Event loop";
-
     disconnect();
 }
 
@@ -130,7 +123,7 @@ bool TcpClientSession::setSocketDescriptor(const int &aFd)
 
 bool TcpClientSession::disconnect()
 {
-     mMutex.lock();
+    mMutex.lock();
     //change
     if(mSockFd>=0)
     {
@@ -158,9 +151,7 @@ bool TcpServerSession::start(const char *aIp,const int &aPort)
         return false;
     }
 
-
-
-                    memset(&mServerAddr, 0,sizeof(mServerAddr));
+    memset(&mServerAddr, 0,sizeof(mServerAddr));
 
     mServerAddr.sin_family = AF_INET;
     mServerAddr.sin_addr.s_addr = inet_addr(aIp);
@@ -169,7 +160,7 @@ bool TcpServerSession::start(const char *aIp,const int &aPort)
 
     if ((bind(mSockFd,(struct  sockaddr*)&mServerAddr, sizeof(mServerAddr))) != 0)
     {
-    LOG(ERROR)<<"Bind Failed";
+        LOG(ERROR)<<"Bind Failed";
         return false;
     }
 
@@ -181,6 +172,7 @@ bool TcpServerSession::start(const char *aIp,const int &aPort)
 
 TcpServerSession::~TcpServerSession()
 {
+    LOG_FUNCTION_NAME;
     stop();
     if(mCleanupThread)
     {
@@ -196,6 +188,7 @@ TcpServerSession::~TcpServerSession()
 
 bool TcpServerSession::stop()
 {
+    LOG_FUNCTION_NAME;
     mMutex.lock();
     if(mSockFd>=0)
     {
@@ -237,7 +230,7 @@ void TcpServerSession::cleanupThread()
     LOG_FUNCTION_NAME;
     while(1)
     {
-        LOG(DEBUG)<<"Cleanup Routine : 5 seconds delay";
+        LOG(DEBUG)<<"Number of Total Clients"<<mActiveClients.size();
         std::this_thread::sleep_for(std::chrono::seconds( 5) );
         //Let's iterate through the sessions and see if any of them has been disconnected, if so , free up.
         for (std::vector<TcpClientSession *>::iterator i=mActiveClients.begin(); i!=mActiveClients.end(); i++)
