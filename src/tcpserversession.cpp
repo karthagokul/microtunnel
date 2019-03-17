@@ -123,6 +123,10 @@ void TcpServerSession::cleanupThread()
                 delete t;
                 i--;
             }
+            else
+            {
+                LOG(DEBUG)<<"T Status"<<t->status();
+            }
         }
     }
 }

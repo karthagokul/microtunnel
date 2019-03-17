@@ -42,6 +42,8 @@ void TcpClientSession::eventLoop()
         }
         mMutex.unlock();
     }
+    //lets close
+    disconnect();
 }
 
 TcpClientSession::~TcpClientSession()

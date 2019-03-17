@@ -7,7 +7,7 @@ class TcpClientSession;
 class TcpServerSessionListener:public SessionListener
 {
 public:
-   virtual void newConnection(TcpClientSession *t)=0;
+    virtual void newConnection(TcpClientSession *t)=0;
 };
 
 class TcpServerSession:public Session

@@ -57,10 +57,10 @@ bool  Session::cleanup()
         LOG(WARN)<<"Socket is already disconnected";
         return false;
     }
-    LOG(DEBUG)<<"Socket ID : "<<mSockFd;
+    //LOG(DEBUG)<<"Socket ID : "<<mSockFd;
     if (mSockFd!=-1)
     {
-        LOG(DEBUG)<<"Socket ID : "<<mSockFd;
+        //LOG(DEBUG)<<"Socket ID : "<<mSockFd;
         getError(); // first clear any errors, which can cause close to fail
         if (shutdown(mSockFd, SHUT_RDWR) < 0) // secondly, terminate the 'reliable' delivery
             if (errno != ENOTCONN && errno != EINVAL) // SGI causes EINVAL

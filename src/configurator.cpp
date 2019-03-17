@@ -80,7 +80,7 @@ bool Configurator::init()
         }
     }
 
-/*std::cout   << reader.GetInteger("protocol", "version", -1) << ", name="
+    /*std::cout   << reader.GetInteger("protocol", "version", -1) << ", name="
 << reader.Get("user", "name", "UNKNOWN") << ", email="
 << reader.Get("user", "email", "UNKNOWN") << ", multi="
 << reader.Get("user", "multi", "UNKNOWN") << ", pi="

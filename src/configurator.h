@@ -20,8 +20,8 @@
 //default configs
 struct GeneralConfig
 {
-   bool debuglog=false;
-   bool foreground=false;
+    bool debuglog=false;
+    bool foreground=false;
 };
 
 struct TunnelConfig

@@ -57,11 +57,11 @@ void ProxyConnection::onError(const SessionError &aErrorCode)
 }
 void ProxyConnection::statusChanged(const int &aSockFd, const SessionStatus &aStatus)
 {
-    LOG(DEBUG)<<"Statuc Changed in "<<aSockFd;
+    LOG(DEBUG)<<"Status Changed in "<<aSockFd;
     LOG(DEBUG)<<"Sender id is "<<sender->id();
     LOG(DEBUG)<<"Reciver id is"<<reciver->id();
 
-   /* if(aStatus==Disconnected)
+    if(aStatus==Disconnected)
     {
         if(aSockFd==reciver->id())
         {
@@ -71,14 +71,14 @@ void ProxyConnection::statusChanged(const int &aSockFd, const SessionStatus &aSt
         {
             reciver->disconnect();
         }
-    }*/
+    }
 }
 
 void ProxyConnection::dataAvailable(const int &aSockFd, const char *aData)
 {
-    LOG(DEBUG)<<"Data is ready on "<<aSockFd;
-    LOG(DEBUG)<<"Sender id is "<<sender->id();
-    LOG(DEBUG)<<"Reciver id is"<<reciver->id();
+    LOG(DEBUG,DEBUG_LEVEL_3)<<"Data is ready on "<<aSockFd;
+    LOG(DEBUG,DEBUG_LEVEL_3)<<"Sender id is "<<sender->id();
+    LOG(DEBUG,DEBUG_LEVEL_3)<<"Reciver id is"<<reciver->id();
 
     bool ret=false;
     if(aSockFd==reciver->id())
@@ -92,7 +92,7 @@ void ProxyConnection::dataAvailable(const int &aSockFd, const char *aData)
     if(ret!=true)
     {
         LOG(ERROR)<<"Broken Net Link : Closing the session";
-      //  sender->disconnect();
+        //  sender->disconnect();
         reciver->disconnect();
     }
 }

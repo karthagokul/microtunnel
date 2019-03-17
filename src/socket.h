@@ -84,7 +84,9 @@ protected:
     void setStatus(SessionStatus aState)
     {
         mStatus=aState;
-        //mListener->statusChanged(mSockFd,mStatus);
+        if(mListener)
+            mListener->statusChanged(mSockFd,mStatus);
+
     }
 
 };
