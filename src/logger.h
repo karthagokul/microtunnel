@@ -48,6 +48,7 @@ enum typelog {
 struct structlog {
     bool headers = false;
     typelog level = WARN;
+    int debug_depth=1;
 };
 
 extern structlog LOGCFG;
@@ -59,8 +60,9 @@ static Color::Modifier green(Color::FG_GREEN);
 class LOG {
 public:
     LOG() {}
-    LOG(typelog type) {
+    LOG(typelog type,int debug_depth=0) {
         msglevel = type;
+        depth=debug_depth;
         if(LOGCFG.headers) {
 
             switch(type)
@@ -95,13 +97,18 @@ public:
     template<class T>
     LOG &operator<<(const T &msg) {
         if(msglevel & LOGCFG.level) {
-            cout << msg;
-            opened = true;
+            if(LOGCFG.debug_depth>=depth)
+            {
+                cout << msg;
+                opened = true;
+            }
+
         }
         return *this;
     }
 private:
     bool opened = false;
+    int depth=0;
     typelog msglevel = DEBUG;
     inline string getLabel(typelog type) {
         string label;
@@ -115,6 +122,9 @@ private:
     }
 };
 
-#define LOG_FUNCTION_NAME { LOG(DEBUG) << __PRETTY_FUNCTION__;}
+#define DEBUG_LEVEL_1 1
+#define DEBUG_LEVEL_2 2
+#define DEBUG_LEVEL_3 3
+#define LOG_FUNCTION_NAME { LOG(DEBUG,DEBUG_LEVEL_3) << __PRETTY_FUNCTION__;}
 
 #endif  /* LOG_H */
