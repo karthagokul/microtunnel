@@ -14,32 +14,35 @@
 using namespace std;
 
 namespace Color {
-    enum Code {
-        FG_RED      = 31,
-        FG_GREEN    = 32,
-        FG_BLUE     = 34,
-        FG_DEFAULT  = 39,
-        BG_RED      = 41,
-        BG_GREEN    = 42,
-        BG_BLUE     = 44,
-        BG_DEFAULT  = 49
-    };
-    class Modifier {
-        Code code;
-    public:
-        Modifier(Code pCode) : code(pCode) {}
-        friend std::ostream&
-        operator<<(std::ostream& os, const Modifier& mod) {
-            return os << "\033[" << mod.code << "m";
-        }
-    };
+enum Code {
+    FG_RED      = 31,
+    FG_GREEN    = 32,
+    FG_BLUE     = 34,
+    FG_DEFAULT  = 39,
+    BG_RED      = 41,
+    BG_GREEN    = 42,
+    BG_BLUE     = 44,
+    BG_DEFAULT  = 49
+};
+class Modifier {
+    Code code;
+public:
+    Modifier(Code pCode) : code(pCode) {}
+    friend std::ostream&
+    operator<<(std::ostream& os, const Modifier& mod) {
+        return os << "\033[" << mod.code << "m";
+    }
+};
 }
 
 enum typelog {
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR
+    INFO = 0x1,
+    ERROR = 0x2,
+    WARN = 0x4,
+    DEBUG = 0x8,
+    DEFAULT_LOG_LEVEL =  INFO | ERROR | WARN,
+    ALL_LOG_LEVEL = INFO | ERROR | WARN | DEBUG
+
 };
 
 struct structlog {
@@ -62,7 +65,7 @@ public:
 
             switch(type)
             {
-                case DEBUG:
+            case DEBUG:
                 operator << (def);
                 break;
             case INFO:
@@ -72,10 +75,10 @@ public:
                 operator << (blue);
                 break;
             case ERROR:
-                 operator << (red);
+                operator << (red);
                 break;
-                default:
-                 operator << (def);
+            default:
+                operator << (def);
                 break;
             }
 
@@ -91,7 +94,7 @@ public:
     }
     template<class T>
     LOG &operator<<(const T &msg) {
-        if(msglevel >= LOGCFG.level) {
+        if(msglevel & LOGCFG.level) {
             cout << msg;
             opened = true;
         }
@@ -103,10 +106,10 @@ private:
     inline string getLabel(typelog type) {
         string label;
         switch(type) {
-            case DEBUG: label = "DEBUG"; break;
-            case INFO:  label = "INFO "; break;
-            case WARN:  label = "WARN "; break;
-            case ERROR: label = "ERROR"; break;
+        case DEBUG: label = "DEBUG"; break;
+        case INFO:  label = "INFO "; break;
+        case WARN:  label = "WARN "; break;
+        case ERROR: label = "ERROR"; break;
         }
         return label;
     }

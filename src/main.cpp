@@ -7,6 +7,7 @@
 #include "microtunnelapp.h"
 
 using namespace std;
+MicroTunnelApp app;
 
 void sig_handler(int signo)
 {
@@ -16,53 +17,12 @@ void sig_handler(int signo)
         printf("received SIGKILL\n");
     else if (signo == SIGSTOP)
         printf("received SIGSTOP\n");
-
+    app.stop();
     exit(0);
 }
 
-class TestProxy:public TcpServerSessionListener
-{
-public:
-    void onError(const SessionError &aErrorCode)
-    {
-    }
-
-    void newConnection(TcpClientSession *a)
-    {
-        LOG(INFO)<<"New Connection";
-        TcpClientSession *s=a;
-        const char *data="hello";
-        s->writeBuffer(data);
-    }
-
-    TestProxy()
-    {
-        s=new TcpServerSession(this);
-    }
-
-    void start()
-    {
-        const char *aIp="127.0.0.1";
-        const int port=8080;
-        if(!s->start(aIp,port))
-        {
-            std::cerr<<"failed";
-            exit(0);
-        }
-    }
-
-private:
-    TcpServerSession *s;
-};
-
 int main()
 {
-
-    MicroTunnelApp app;
-    app.start();
-
-    return 0;
-
     //TODO : Better way
     if (signal(SIGINT, sig_handler) == SIG_ERR)
         LOG(WARN)<<"Failed:SIGINT Subscription";
@@ -72,9 +32,7 @@ int main()
         LOG(WARN)<<"Failed:SIGABRT Subscription";
 
 
-
-    TestProxy t;
-    t.start();
+    app.start();
 
     //Main event loop
     while(1)

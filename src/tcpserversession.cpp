@@ -3,7 +3,7 @@
 
 
 TcpServerSession::TcpServerSession(TcpServerSessionListener *aListner)
-    :mListener(aListner)
+    :Session(aListner),mListener(aListner)
 {
     LOG_FUNCTION_NAME;
 }
@@ -19,6 +19,10 @@ bool TcpServerSession::start(const char *aIp,const int &aPort)
     }
 
     memset(&mServerAddr, 0,sizeof(mServerAddr));
+
+    // To avoid binding problems
+    int val = 1;
+    setsockopt(mSockFd,SOL_SOCKET,SO_REUSEADDR,&val,sizeof(int));
 
     mServerAddr.sin_family = AF_INET;
     mServerAddr.sin_addr.s_addr = inet_addr(aIp);
@@ -41,16 +45,6 @@ TcpServerSession::~TcpServerSession()
 {
     LOG_FUNCTION_NAME;
     stop();
-    if(mCleanupThread)
-    {
-        delete mCleanupThread;
-        mCleanupThread=0;
-    }
-    if(mEventThread)
-    {
-        delete mEventThread;
-        mEventThread=0;
-    }
 }
 
 bool TcpServerSession::stop()
@@ -59,9 +53,26 @@ bool TcpServerSession::stop()
     mMutex.lock();
     if(mSockFd>=0)
     {
+        //Look at the client shutdown calls
         close(mSockFd);
         mSockFd=-1;
     }
+    setStatus(Disconnected);
+    if(mCleanupThread)
+    {
+        mCleanupThread->detach();
+        delete mCleanupThread;
+        mCleanupThread=0;
+    }
+
+
+    if(mEventThread)
+    {
+        mEventThread->detach();
+        delete mEventThread;
+        mEventThread=0;
+    }
+
     mMutex.unlock();
     return true;
 }
@@ -78,7 +89,7 @@ void TcpServerSession::eventLoop()
             LOG(ERROR)<<"Listen Failed";
             exit(0);
         }
-
+        setStatus(Listening);
         int len = sizeof(mClientAddr);
         // Accept the data packet from client and verification
         int connfd = accept(mSockFd, (struct  sockaddr*)&mClientAddr, (socklen_t*)&len);

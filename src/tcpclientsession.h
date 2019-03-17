@@ -3,12 +3,10 @@
 
 #include "socket.h"
 
-class TcpClientSessionListener
+class TcpClientSessionListener:public SessionListener
 {
 public:
-    virtual void onError(const SessionError &aErrorCode){}
-    virtual void statusChanged(const SessionStatus &aStatus){}
-    virtual void dataAvailable(const char *aData)=0;
+    virtual void dataAvailable(const int &aSockFd, const char *aData)=0;
 };
 
 
@@ -20,20 +18,15 @@ public:
     {
         mListener=aListener;
     }
-    SessionStatus status() const
-    {
-        return mStatus;
-    }
     bool setSocketDescriptor(const int &aFd);
     bool connectToHost(const char *aIp,const int &aPort);
     bool disconnect();
     ~TcpClientSession();
-    std::mutex mMutex;
+
 
 protected:
-   TcpClientSessionListener *mListener=0;
+    TcpClientSessionListener *mListener=0;
     void eventLoop();
-   SessionStatus mStatus=Disconnected;
 };
 
 #endif // TCPCLIENTSESSION_H

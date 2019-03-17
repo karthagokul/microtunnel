@@ -26,6 +26,7 @@ struct GeneralConfig
 
 struct TunnelConfig
 {
+    std::string name;
     std::string cipher="";
     bool server=true;
     uint sourceport=8080;
@@ -33,6 +34,10 @@ struct TunnelConfig
     std::string sourcehost="127.0.0.1";
     std::string targethost="127.0.0.1";
 };
+
+/*!
+ * \brief The Configurator class : The class is responsible for the system wide configuration fetched from an external ini file.
+ */
 
 class Configurator
 {

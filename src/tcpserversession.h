@@ -4,11 +4,9 @@
 #include "socket.h"
 
 class TcpClientSession;
-class TcpServerSessionListener
+class TcpServerSessionListener:public SessionListener
 {
 public:
-   virtual void onError(const SessionError &aErrorCode){}
-   virtual void statusChanged(const SessionStatus &aStatus){}
    virtual void newConnection(TcpClientSession *t)=0;
 };
 
@@ -26,7 +24,7 @@ protected:
     TcpServerSessionListener *mListener;
     std::vector<TcpClientSession*> mActiveClients;
     std::thread *mCleanupThread=0;
-    std::mutex mMutex;
+
 };
 
 #endif // TCPSERVERSESSION_H

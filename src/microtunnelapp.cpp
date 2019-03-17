@@ -14,12 +14,13 @@ bool MicroTunnelApp::readGeneralConfiguration()
 
     if(mConfig.systemconfig().debuglog==true)
     {
-        LOGCFG.level = DEBUG;
+        LOGCFG.level = ALL_LOG_LEVEL;
         LOG(INFO)<<"Debug Logs : True";
     }
     else
     {
         LOG(INFO)<<"Debug Logs : False";
+        LOGCFG.level = DEFAULT_LOG_LEVEL;
     }
 
     if(mConfig.systemconfig().foreground==true)
@@ -42,17 +43,22 @@ bool MicroTunnelApp::start()
     {
         LOG(INFO)<<x.first;
         TunnelConfig *tIt=x.second;
-        LOG(INFO)<<"Cipher : "<<tIt->cipher;
-        LOG(INFO)<<"Source Host : "<<tIt->sourcehost;
-        LOG(INFO)<<"Source Port : "<<tIt->sourceport;
-        LOG(INFO)<<"Target Host : "<<tIt->targethost;
-        LOG(INFO)<<"Target Port : "<<tIt->targetport;
+        TunnelSession *session=new TunnelSession(tIt);
+        mSessions.push_back(session);
     }
+
     return true;
 }
 
 bool MicroTunnelApp::stop()
 {
-    LOG(INFO)<<"Stopping the Tunnel";
+    //LOG(DEBUG)<<"Stopping the Tunnel";
+
+    std::vector<TunnelSession*>::iterator it = mSessions.begin();
+    for (; it != mSessions.end(); ++it) {
+        delete *it;
+    }
+    mSessions.clear();
+   // LOG(DEBUG)<<"Tunnel Session Count"<<mSessions.size();
     return true;
 }

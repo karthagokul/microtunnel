@@ -1,7 +1,9 @@
 #include "tcpclientsession.h"
 
+
+//Per connection thread design needs to be changed
 TcpClientSession::TcpClientSession(TcpClientSessionListener *aListener)
-    :mListener(aListener)
+    :Session(aListener),mListener(aListener)
 {
 }
 
@@ -10,7 +12,7 @@ void TcpClientSession::eventLoop()
     LOG_FUNCTION_NAME;
 
     mMutex.lock();
-    mStatus=Connected;
+    setStatus(Connected);
     mMutex.unlock();
 
     char buff[SOCKET_BUFFER_SIZE];
@@ -32,24 +34,27 @@ void TcpClientSession::eventLoop()
             break;
         }
         mMutex.lock();
+        //LOG(DEBUG)<<buff;
         if(mListener)
         {
-            mListener->dataAvailable(buff);
+           // LOG(DEBUG)<<"Sending the data to listner";
+            mListener->dataAvailable(mSockFd,buff);
         }
         mMutex.unlock();
     }
-    disconnect();
 }
 
 TcpClientSession::~TcpClientSession()
 {
     LOG_FUNCTION_NAME;
     disconnect();
+
 }
 
 
 bool TcpClientSession::connectToHost(const char *aIp,const int &aPort)
 {
+    LOG(DEBUG)<<"Host:"<<aIp<<",Port:"<<aPort;
     mSockFd = socket(AF_INET, SOCK_STREAM, 0);
     if (mSockFd == -1) {
         LOG(ERROR)<<"Invalid Socket";
@@ -64,6 +69,7 @@ bool TcpClientSession::connectToHost(const char *aIp,const int &aPort)
     if (connect(mSockFd, (struct  sockaddr*)&mServerAddr, sizeof(mServerAddr)) != 0)
     {
         LOG(ERROR)<<"Unable to Connect";
+        mSockFd=-1;
         return false;
     }
     mEventThread=new std::thread(&TcpClientSession::eventLoop,this);
@@ -79,15 +85,12 @@ bool TcpClientSession::setSocketDescriptor(const int &aFd)
 
 bool TcpClientSession::disconnect()
 {
-    mMutex.lock();
-    //change
-    if(mSockFd>=0)
+    cleanup();
+    if(mEventThread)
     {
-        LOG(ERROR)<<"Closing the Socket";
-        close(mSockFd);
-        mSockFd=-1;
+        mEventThread->detach();
+        delete mEventThread;
+        mEventThread=0;
     }
-    mStatus=Disconnected;
-    mMutex.unlock();
     return true;
 }

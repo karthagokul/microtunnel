@@ -1,16 +1,11 @@
 #ifndef MICROTUNNELAPP_H
 #define MICROTUNNELAPP_H
 
-#include "tcpclientsession.h"
-#include "tcpserversession.h"
 #include "logger.h"
 #include "configurator.h"
+#include "tunnelsession.h"
+#include <vector>
 #include <map>
-
-class TunnelSession
-{
-    //a network instance
-};
 
 class MicroTunnelApp
 {
@@ -21,7 +16,7 @@ public:
 private:
     bool readGeneralConfiguration();
 private:
-    std::map<std::string,TunnelSession *> mSessions;
+    std::vector<TunnelSession *> mSessions;
     Configurator mConfig;
 };
 

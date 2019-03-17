@@ -68,6 +68,7 @@ bool Configurator::init()
 
 
             TunnelConfig *tconfig=new TunnelConfig;
+            tconfig->name=sectionheader;
             tconfig->sourceport=sourceport;
             tconfig->targetport=targetport;
             tconfig->targethost=targethost;

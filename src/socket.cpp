@@ -3,6 +3,7 @@
 
 SessionError Session::getError()
 {
+    LOG_FUNCTION_NAME;
     SessionError errorCode=Unknown;
     if(mSockFd!=-1)
     {
@@ -36,10 +37,37 @@ SessionError Session::getError()
 bool Session::writeBuffer(const char *aBuffer)
 {
     LOG_FUNCTION_NAME;
+    if(mSockFd<=0)
+    {
+        return false;
+    }
     if(write(mSockFd, aBuffer, sizeof(aBuffer))<=0)
     {
         LOG(ERROR)<<"Sending Buffer failed";
         return false;
     }
+    return true;
+}
+
+
+bool  Session::cleanup()
+{
+    if(status()==Disconnected)
+    {
+        LOG(WARN)<<"Socket is already disconnected";
+        return false;
+    }
+    LOG(DEBUG)<<"Socket ID : "<<mSockFd;
+    if (mSockFd!=-1)
+    {
+        LOG(DEBUG)<<"Socket ID : "<<mSockFd;
+        getError(); // first clear any errors, which can cause close to fail
+        if (shutdown(mSockFd, SHUT_RDWR) < 0) // secondly, terminate the 'reliable' delivery
+            if (errno != ENOTCONN && errno != EINVAL) // SGI causes EINVAL
+                LOG(ERROR)<<"shutdown";
+        if (close(mSockFd) < 0) // finally call close()
+            LOG(ERROR)<<"close";
+    }
+    setStatus(Disconnected);
     return true;
 }
